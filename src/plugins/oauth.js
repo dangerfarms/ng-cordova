@@ -166,14 +166,18 @@ angular.module("ngCordova.plugins.oauth", ["ngCordova.plugins.oauthUtility"])
         *
         * @param    string clientId
         * @param    array appScope
+        * @param    string responseType
         * @return   promise
         */
-        google: function(clientId, appScope) {
+        google: function(clientId, appScope, responseType) {
             var deferred = $q.defer();
+            if (!angular.isDefined(responseType)) {
+              responseType = "token";
+            }
             if(window.cordova) {
                 var cordovaMetadata = cordova.require("cordova/plugin_list").metadata;
                 if(cordovaMetadata.hasOwnProperty("org.apache.cordova.inappbrowser") === true) {
-                    var browserRef = window.open('https://accounts.google.com/o/oauth2/auth?client_id=' + clientId + '&redirect_uri=http://localhost/callback&scope=' + appScope.join(" ") + '&approval_prompt=force&response_type=token', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
+                    var browserRef = window.open('https://accounts.google.com/o/oauth2/auth?client_id=' + clientId + '&redirect_uri=http://localhost/callback&scope=' + appScope.join(" ") + '&approval_prompt=force&response_type=' + responseType, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
                     browserRef.addEventListener("loadstart", function(event) {
                         if((event.url).indexOf("http://localhost/callback") === 0) {
                             var callbackResponse = (event.url).split("#")[1];
