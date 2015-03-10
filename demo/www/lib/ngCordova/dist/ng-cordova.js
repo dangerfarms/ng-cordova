@@ -4750,7 +4750,7 @@ angular.module("ngCordova.plugins.oauth", ["ngCordova.plugins.oauthUtility"])
                     var browserRef = window.open('https://accounts.google.com/o/oauth2/auth?client_id=' + clientId + '&redirect_uri=' + redirectUri + '&scope=' + appScope.join(" ") + '&approval_prompt=force&response_type=' + responseType, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
                     browserRef.addEventListener("loadstart", function(event) {
                         var urlSplitChar = (responseType === 'token') ? '#' : '?';
-                        if((event.url).indexOf("http://localhost/callback") === 0) {
+                        if((event.url).indexOf(redirectUri) === 0) {
                             var callbackResponse = (event.url).split(urlSplitChar)[1];
                             var responseParameters = (callbackResponse).split("&");
                             var parameterMap = [];
