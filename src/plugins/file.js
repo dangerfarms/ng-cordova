@@ -1,9 +1,9 @@
-// install   :     cordova plugin add org.apache.cordova.file
-// link      :     https://github.com/apache/cordova-plugin-file/blob/master/doc/index.md
+// install   :     cordova plugin add cordova-plugin-file
+// link      :     https://github.com/apache/cordova-plugin-file
 
 angular.module('ngCordova.plugins.file', [])
 
-  .constant("$cordovaFileError", {
+  .constant('$cordovaFileError', {
     1: 'NOT_FOUND_ERR',
     2: 'SECURITY_ERR',
     3: 'ABORT_ERR',
@@ -23,11 +23,22 @@ angular.module('ngCordova.plugins.file', [])
     this.$get = ['$q', '$window', '$cordovaFileError', function ($q, $window, $cordovaFileError) {
 
       return {
+
+        getFreeDiskSpace: function () {
+          var q = $q.defer();
+          cordova.exec(function (result) {
+            q.resolve(result);
+          }, function (error) {
+            q.reject(error);
+          }, 'File', 'getFreeDiskSpace', []);
+          return q.promise;
+        },
+
         checkDir: function (path, dir) {
           var q = $q.defer();
 
           if ((/^\//.test(dir))) {
-            q.reject("directory cannot start with \/")
+            q.reject('directory cannot start with \/');
           }
 
           try {
@@ -36,7 +47,7 @@ angular.module('ngCordova.plugins.file', [])
               if (fileSystem.isDirectory === true) {
                 q.resolve(fileSystem);
               } else {
-                q.reject({code: 13, message: "input is not a directory"});
+                q.reject({code: 13, message: 'input is not a directory'});
               }
             }, function (error) {
               error.message = $cordovaFileError[error.code];
@@ -50,12 +61,11 @@ angular.module('ngCordova.plugins.file', [])
           return q.promise;
         },
 
-
         checkFile: function (path, file) {
           var q = $q.defer();
 
           if ((/^\//.test(file))) {
-            q.reject("directory cannot start with \/")
+            q.reject('directory cannot start with \/');
           }
 
           try {
@@ -64,7 +74,7 @@ angular.module('ngCordova.plugins.file', [])
               if (fileSystem.isFile === true) {
                 q.resolve(fileSystem);
               } else {
-                q.reject({code: 13, message: "input is not a file"});
+                q.reject({code: 13, message: 'input is not a file'});
               }
             }, function (error) {
               error.message = $cordovaFileError[error.code];
@@ -82,7 +92,7 @@ angular.module('ngCordova.plugins.file', [])
           var q = $q.defer();
 
           if ((/^\//.test(dirName))) {
-            q.reject("directory cannot start with \/")
+            q.reject('directory cannot start with \/');
           }
 
           replaceBool = replaceBool ? false : true;
@@ -116,7 +126,7 @@ angular.module('ngCordova.plugins.file', [])
           var q = $q.defer();
 
           if ((/^\//.test(fileName))) {
-            q.reject("file-name cannot start with \/")
+            q.reject('file-name cannot start with \/');
           }
 
           replaceBool = replaceBool ? false : true;
@@ -145,12 +155,11 @@ angular.module('ngCordova.plugins.file', [])
           return q.promise;
         },
 
-
         removeDir: function (path, dirName) {
           var q = $q.defer();
 
           if ((/^\//.test(dirName))) {
-            q.reject("file-name cannot start with \/")
+            q.reject('file-name cannot start with \/');
           }
 
           try {
@@ -181,7 +190,7 @@ angular.module('ngCordova.plugins.file', [])
           var q = $q.defer();
 
           if ((/^\//.test(fileName))) {
-            q.reject("file-name cannot start with \/");
+            q.reject('file-name cannot start with \/');
           }
 
           try {
@@ -212,7 +221,7 @@ angular.module('ngCordova.plugins.file', [])
           var q = $q.defer();
 
           if ((/^\//.test(dirName))) {
-            q.reject("file-name cannot start with \/")
+            q.reject('file-name cannot start with \/');
           }
 
           try {
@@ -243,7 +252,7 @@ angular.module('ngCordova.plugins.file', [])
           var q = $q.defer();
 
           if ((/^\//.test(fileName))) {
-            q.reject("file-name cannot start with \/");
+            q.reject('file-name cannot start with \/');
           }
 
           replaceBool = replaceBool ? false : true;
@@ -268,8 +277,7 @@ angular.module('ngCordova.plugins.file', [])
                   writer.onwriteend = function (evt) {
                     if (this.error) {
                       q.reject(this.error);
-                    }
-                    else {
+                    } else {
                       q.resolve(evt);
                     }
                   };
@@ -296,12 +304,11 @@ angular.module('ngCordova.plugins.file', [])
           return q.promise;
         },
 
-
         writeExistingFile: function (path, fileName, text) {
           var q = $q.defer();
 
           if ((/^\//.test(fileName))) {
-            q.reject("file-name cannot start with \/");
+            q.reject('file-name cannot start with \/');
           }
 
           try {
@@ -313,8 +320,7 @@ angular.module('ngCordova.plugins.file', [])
                   writer.onwriteend = function (evt) {
                     if (this.error) {
                       q.reject(this.error);
-                    }
-                    else {
+                    } else {
                       q.resolve(evt);
                     }
                   };
@@ -341,12 +347,11 @@ angular.module('ngCordova.plugins.file', [])
           return q.promise;
         },
 
-
         readAsText: function (path, file) {
           var q = $q.defer();
 
           if ((/^\//.test(file))) {
-            q.reject("file-name cannot start with \/");
+            q.reject('file-name cannot start with \/');
           }
 
           try {
@@ -356,13 +361,11 @@ angular.module('ngCordova.plugins.file', [])
                   var reader = new FileReader();
 
                   reader.onloadend = function (evt) {
-                    if (evt.target._result !== undefined || evt.target._result !== null) {
-                      q.resolve(evt.target._result);
-                    }
-                    else if (evt.target._error !== undefined || evt.target._error !== null) {
-                      q.reject(evt.target._error);
-                    }
-                    else {
+                    if (evt.target.result !== undefined || evt.target.result !== null) {
+                      q.resolve(evt.target.result);
+                    } else if (evt.target.error !== undefined || evt.target.error !== null) {
+                      q.reject(evt.target.error);
+                    } else {
                       q.reject({code: null, message: 'READER_ONLOADEND_ERR'});
                     }
                   };
@@ -385,12 +388,11 @@ angular.module('ngCordova.plugins.file', [])
           return q.promise;
         },
 
-
         readAsDataURL: function (path, file) {
           var q = $q.defer();
 
           if ((/^\//.test(file))) {
-            q.reject("file-name cannot start with \/");
+            q.reject('file-name cannot start with \/');
           }
 
           try {
@@ -399,13 +401,11 @@ angular.module('ngCordova.plugins.file', [])
                 fileEntry.file(function (fileData) {
                   var reader = new FileReader();
                   reader.onloadend = function (evt) {
-                    if (evt.target._result !== undefined || evt.target._result !== null) {
-                      q.resolve(evt.target._result);
-                    }
-                    else if (evt.target._error !== undefined || evt.target._error !== null) {
-                      q.reject(evt.target._error);
-                    }
-                    else {
+                    if (evt.target.result !== undefined || evt.target.result !== null) {
+                      q.resolve(evt.target.result);
+                    } else if (evt.target.error !== undefined || evt.target.error !== null) {
+                      q.reject(evt.target.error);
+                    } else {
                       q.reject({code: null, message: 'READER_ONLOADEND_ERR'});
                     }
                   };
@@ -431,7 +431,7 @@ angular.module('ngCordova.plugins.file', [])
           var q = $q.defer();
 
           if ((/^\//.test(file))) {
-            q.reject("file-name cannot start with \/");
+            q.reject('file-name cannot start with \/');
           }
 
           try {
@@ -440,13 +440,11 @@ angular.module('ngCordova.plugins.file', [])
                 fileEntry.file(function (fileData) {
                   var reader = new FileReader();
                   reader.onloadend = function (evt) {
-                    if (evt.target._result !== undefined || evt.target._result !== null) {
-                      q.resolve(evt.target._result);
-                    }
-                    else if (evt.target._error !== undefined || evt.target._error !== null) {
-                      q.reject(evt.target._error);
-                    }
-                    else {
+                    if (evt.target.result !== undefined || evt.target.result !== null) {
+                      q.resolve(evt.target.result);
+                    } else if (evt.target.error !== undefined || evt.target.error !== null) {
+                      q.reject(evt.target.error);
+                    } else {
                       q.reject({code: null, message: 'READER_ONLOADEND_ERR'});
                     }
                   };
@@ -472,7 +470,7 @@ angular.module('ngCordova.plugins.file', [])
           var q = $q.defer();
 
           if ((/^\//.test(file))) {
-            q.reject("file-name cannot start with \/");
+            q.reject('file-name cannot start with \/');
           }
 
           try {
@@ -481,13 +479,11 @@ angular.module('ngCordova.plugins.file', [])
                 fileEntry.file(function (fileData) {
                   var reader = new FileReader();
                   reader.onloadend = function (evt) {
-                    if (evt.target._result !== undefined || evt.target._result !== null) {
-                      q.resolve(evt.target._result);
-                    }
-                    else if (evt.target._error !== undefined || evt.target._error !== null) {
-                      q.reject(evt.target._error);
-                    }
-                    else {
+                    if (evt.target.result !== undefined || evt.target.result !== null) {
+                      q.resolve(evt.target.result);
+                    } else if (evt.target.error !== undefined || evt.target.error !== null) {
+                      q.reject(evt.target.error);
+                    } else {
                       q.reject({code: null, message: 'READER_ONLOADEND_ERR'});
                     }
                   };
@@ -509,14 +505,13 @@ angular.module('ngCordova.plugins.file', [])
           return q.promise;
         },
 
-
         moveFile: function (path, fileName, newPath, newFileName) {
           var q = $q.defer();
 
           newFileName = newFileName || fileName;
 
           if ((/^\//.test(fileName)) || (/^\//.test(newFileName))) {
-            q.reject("file-name cannot start with \/");
+            q.reject('file-name cannot start with \/');
           }
 
           try {
@@ -549,7 +544,7 @@ angular.module('ngCordova.plugins.file', [])
           newDirName = newDirName || dirName;
 
           if (/^\//.test(dirName) || (/^\//.test(newDirName))) {
-            q.reject("file-name cannot start with \/");
+            q.reject('file-name cannot start with \/');
           }
 
           try {
@@ -576,14 +571,13 @@ angular.module('ngCordova.plugins.file', [])
           return q.promise;
         },
 
-
         copyDir: function (path, dirName, newPath, newDirName) {
           var q = $q.defer();
 
           newDirName = newDirName || dirName;
 
           if (/^\//.test(dirName) || (/^\//.test(newDirName))) {
-            q.reject("file-name cannot start with \/");
+            q.reject('file-name cannot start with \/');
           }
 
           try {
@@ -622,7 +616,7 @@ angular.module('ngCordova.plugins.file', [])
           newFileName = newFileName || fileName;
 
           if ((/^\//.test(fileName))) {
-            q.reject("file-name cannot start with \/");
+            q.reject('file-name cannot start with \/');
           }
 
           try {
