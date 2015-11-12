@@ -5929,24 +5929,31 @@ angular.module("oauth.providers", ["oauth.utils"])
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
                     if($cordovaOauthUtility.isInAppBrowserInstalled(cordovaPluginList) === true) {
                         var redirect_uri = "http://localhost/callback";
+                        var responseType = "token";
                         if(options !== undefined) {
                             if(options.hasOwnProperty("redirect_uri")) {
                                 redirect_uri = options.redirect_uri;
                             }
+                            if(options.hasOwnProperty("responseType")) {
+                                responseType = options.responseType;
+                            }
                         }
-                        var browserRef = window.open('https://accounts.google.com/o/oauth2/auth?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&scope=' + appScope.join(" ") + '&approval_prompt=force&response_type=token', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
+                        var urlSplitChar = (responseType === 'token') ? '#' : '?';
+                        var browserRef = window.open('https://accounts.google.com/o/oauth2/auth?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&scope=' + appScope.join(" ") + '&approval_prompt=force&response_type=' + responseType, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
                         browserRef.addEventListener("loadstart", function(event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
                            		browserRef.removeEventListener("exit",function(event){});
                             	browserRef.close();
-                                var callbackResponse = (event.url).split("#")[1];
+                                var callbackResponse = (event.url).split(urlSplitChar)[1];
                                 var responseParameters = (callbackResponse).split("&");
                                 var parameterMap = [];
                                 for(var i = 0; i < responseParameters.length; i++) {
                                     parameterMap[responseParameters[i].split("=")[0]] = responseParameters[i].split("=")[1];
                                 }
-                                if(parameterMap.access_token !== undefined && parameterMap.access_token !== null) {
+                                if(responseType === 'token' && parameterMap.access_token !== undefined && parameterMap.access_token !== null) {
                                     deferred.resolve({ access_token: parameterMap.access_token, token_type: parameterMap.token_type, expires_in: parameterMap.expires_in });
+                                } else if (responseType === 'code' && parameterMap.code !== undefined && parameterMap.code !== null) {
+                                    deferred.resolve({ code: parameterMap.code });
                                 } else {
                                     deferred.reject("Problem authenticating");
                                 }
@@ -7694,6 +7701,197 @@ angular.module("oauth.providers", ["oauth.utils"])
 
     }]);
 
+/*
+ * Cordova AngularJS Oauth
+ *
+ * Created by Nic Raboy
+ * http://www.nraboy.com
+ *
+ *
+ *
+ * DESCRIPTION:
+ *
+ * Use Oauth sign in for various web services.
+ *
+ *
+ * REQUIRES:
+ *
+ *    Apache Cordova 3.5+
+ *    Apache InAppBrowser Plugin
+ *    Apache Cordova Whitelist Plugin
+ *
+ *
+ * SUPPORTS:
+ *
+ *    Dropbox
+ *    Digital Ocean
+ *    Google
+ *    GitHub
+ *    Facebook
+ *    LinkedIn
+ *    Instagram
+ *    Box
+ *    Reddit
+ *    Twitter
+ *    Meetup
+ *    Salesforce
+ *    Strava
+ *    Withings
+ *    Foursquare
+ *    Magento
+ *    vkontakte
+ *    Odnoklassniki
+ *    ADFS
+ *    Imgur
+ *    Spotify
+ *    Uber
+ *    Windows Live Connect
+ *    Yammer
+ *    Venmo
+ *    Stripe
+ *    Rally
+ *    Family Search
+ *    Envato
+ *    Slack
+ *    Jawbone
+ *    Untappd
+ */
+
+angular.module("ngCordovaOauth", [
+    "oauth.providers",
+    "oauth.utils"
+]);
+
+angular.module("oauth.utils", [])
+
+    .factory("$cordovaOauthUtility", ["$q", function($q) {
+
+        return {
+
+            /*
+             * Check to see if the mandatory InAppBrowser plugin is installed
+             *
+             * @param
+             * @return   boolean
+             */
+            isInAppBrowserInstalled: function(cordovaPluginList) {
+                var inAppBrowserNames = ["cordova-plugin-inappbrowser", "org.apache.cordova.inappbrowser"];
+                var matchFunction = function(plugin) {
+                    return inAppBrowserNames.some(function(name) {return plugin.pluginId == name;});
+                };
+                return cordovaPluginList.some(matchFunction);
+            },
+
+            /*
+             * Sign an Oauth 1.0 request
+             *
+             * @param    string method
+             * @param    string endPoint
+             * @param    object headerParameters
+             * @param    object bodyParameters
+             * @param    string secretKey
+             * @param    string tokenSecret (optional)
+             * @return   object
+             */
+            createSignature: function(method, endPoint, headerParameters, bodyParameters, secretKey, tokenSecret) {
+                if(typeof jsSHA !== "undefined") {
+                    var headerAndBodyParameters = angular.copy(headerParameters);
+                    var bodyParameterKeys = Object.keys(bodyParameters);
+                    for(var i = 0; i < bodyParameterKeys.length; i++) {
+                        headerAndBodyParameters[bodyParameterKeys[i]] = encodeURIComponent(bodyParameters[bodyParameterKeys[i]]);
+                    }
+                    var signatureBaseString = method + "&" + encodeURIComponent(endPoint) + "&";
+                    var headerAndBodyParameterKeys = (Object.keys(headerAndBodyParameters)).sort();
+                    for(i = 0; i < headerAndBodyParameterKeys.length; i++) {
+                        if(i == headerAndBodyParameterKeys.length - 1) {
+                            signatureBaseString += encodeURIComponent(headerAndBodyParameterKeys[i] + "=" + headerAndBodyParameters[headerAndBodyParameterKeys[i]]);
+                        } else {
+                            signatureBaseString += encodeURIComponent(headerAndBodyParameterKeys[i] + "=" + headerAndBodyParameters[headerAndBodyParameterKeys[i]] + "&");
+                        }
+                    }
+                    var oauthSignatureObject = new jsSHA(signatureBaseString, "TEXT");
+
+                    var encodedTokenSecret = '';
+                    if (tokenSecret) {
+                        encodedTokenSecret = encodeURIComponent(tokenSecret);
+                    }
+
+                    headerParameters.oauth_signature = encodeURIComponent(oauthSignatureObject.getHMAC(encodeURIComponent(secretKey) + "&" + encodedTokenSecret, "TEXT", "SHA-1", "B64"));
+                    var headerParameterKeys = Object.keys(headerParameters);
+                    var authorizationHeader = 'OAuth ';
+                    for(i = 0; i < headerParameterKeys.length; i++) {
+                        if(i == headerParameterKeys.length - 1) {
+                            authorizationHeader += headerParameterKeys[i] + '="' + headerParameters[headerParameterKeys[i]] + '"';
+                        } else {
+                            authorizationHeader += headerParameterKeys[i] + '="' + headerParameters[headerParameterKeys[i]] + '",';
+                        }
+                    }
+                    return { signature_base_string: signatureBaseString, authorization_header: authorizationHeader, signature: headerParameters.oauth_signature };
+                } else {
+                    return "Missing jsSHA JavaScript library";
+                }
+            },
+
+            /*
+            * Create Random String Nonce
+            *
+            * @param    integer length
+            * @return   string
+            */
+            createNonce: function(length) {
+                var text = "";
+                var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                for(var i = 0; i < length; i++) {
+                    text += possible.charAt(Math.floor(Math.random() * possible.length));
+                }
+                return text;
+            },
+
+            generateUrlParameters: function (parameters) {
+                var sortedKeys = Object.keys(parameters);
+                sortedKeys.sort();
+
+                var params = "";
+                var amp = "";
+
+                for (var i = 0 ; i < sortedKeys.length; i++) {
+                    params += amp + sortedKeys[i] + "=" + parameters[sortedKeys[i]];
+                    amp = "&";
+                }
+
+                return params;
+            },
+
+            parseResponseParameters: function (response) {
+                if (response.split) {
+                    var parameters = response.split("&");
+                    var parameterMap = {};
+                    for(var i = 0; i < parameters.length; i++) {
+                        parameterMap[parameters[i].split("=")[0]] = parameters[i].split("=")[1];
+                    }
+                    return parameterMap;
+                }
+                else {
+                    return {};
+                }
+            },
+
+            generateOauthParametersInstance: function(consumerKey) {
+                var nonceObj = new jsSHA(Math.round((new Date()).getTime() / 1000.0), "TEXT");
+                var oauthObject = {
+                    oauth_consumer_key: consumerKey,
+                    oauth_nonce: nonceObj.getHash("SHA-1", "HEX"),
+                    oauth_signature_method: "HMAC-SHA1",
+                    oauth_timestamp: Math.round((new Date()).getTime() / 1000.0),
+                    oauth_version: "1.0"
+                };
+                return oauthObject;
+            }
+
+        };
+
+    }]);
+
 // install   :      cordova plugin add https://github.com/Paldom/PinDialog.git
 // link      :      https://github.com/Paldom/PinDialog
 
@@ -9023,24 +9221,31 @@ angular.module("oauth.providers", ["oauth.utils"])
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
                     if($cordovaOauthUtility.isInAppBrowserInstalled(cordovaPluginList) === true) {
                         var redirect_uri = "http://localhost/callback";
+                        var responseType = "token";
                         if(options !== undefined) {
                             if(options.hasOwnProperty("redirect_uri")) {
                                 redirect_uri = options.redirect_uri;
                             }
+                            if(options.hasOwnProperty("responseType")) {
+                                responseType = options.responseType;
+                            }
                         }
-                        var browserRef = window.open('https://accounts.google.com/o/oauth2/auth?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&scope=' + appScope.join(" ") + '&approval_prompt=force&response_type=token', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
+                        var urlSplitChar = (responseType === 'token') ? '#' : '?';
+                        var browserRef = window.open('https://accounts.google.com/o/oauth2/auth?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&scope=' + appScope.join(" ") + '&approval_prompt=force&response_type=' + responseType, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
                         browserRef.addEventListener("loadstart", function(event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
                            		browserRef.removeEventListener("exit",function(event){});
                             	browserRef.close();
-                                var callbackResponse = (event.url).split("#")[1];
+                                var callbackResponse = (event.url).split(urlSplitChar)[1];
                                 var responseParameters = (callbackResponse).split("&");
                                 var parameterMap = [];
                                 for(var i = 0; i < responseParameters.length; i++) {
                                     parameterMap[responseParameters[i].split("=")[0]] = responseParameters[i].split("=")[1];
                                 }
-                                if(parameterMap.access_token !== undefined && parameterMap.access_token !== null) {
+                                if(responseType === 'token' && parameterMap.access_token !== undefined && parameterMap.access_token !== null) {
                                     deferred.resolve({ access_token: parameterMap.access_token, token_type: parameterMap.token_type, expires_in: parameterMap.expires_in });
+                                } else if (responseType === 'code' && parameterMap.code !== undefined && parameterMap.code !== null) {
+                                    deferred.resolve({ code: parameterMap.code });
                                 } else {
                                     deferred.reject("Problem authenticating");
                                 }
