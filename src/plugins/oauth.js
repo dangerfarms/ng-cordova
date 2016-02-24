@@ -24,9 +24,9 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 console.log(requestToken);
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 
-                                $http({method: "post", url: "https://login.microsoftonline.com/" + tenantId + "/oauth2/token", data: 
-                                    "client_id=" + clientId + 
-                                    "&code=" + requestToken + 
+                                $http({method: "post", url: "https://login.microsoftonline.com/" + tenantId + "/oauth2/token", data:
+                                    "client_id=" + clientId +
+                                    "&code=" + requestToken +
                                     "&redirect_uri=http://localhost/callback&" +
                                     "grant_type=authorization_code&" +
                                     "resource=" + resourceURL})
@@ -2058,7 +2058,11 @@ angular.module("oauth.utils", [])
              * @return   boolean
              */
             isInAppBrowserInstalled: function(cordovaPluginList) {
-                var inAppBrowserNames = ["cordova-plugin-inappbrowser", "org.apache.cordova.inappbrowser"];
+                var inAppBrowserNames = [
+                  "cordova-plugin-inappbrowser.inappbrowser",
+                  "cordova-plugin-inappbrowser",
+                  "org.apache.cordova.inappbrowser"
+                ];
                 var matchFunction = function(plugin) {
                     return inAppBrowserNames.some(function(name) {return plugin.pluginId == name;});
                 };
