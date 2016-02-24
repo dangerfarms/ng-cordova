@@ -1,5 +1,5 @@
 angular.module("oauth.providers", ["oauth.utils"])
-    .factory("$cordovaOauth", ["$q", '$http', "$cordovaOauthUtility", function($q, $http, $cordovaOauthUtility) {
+    .factory("$cordovaOauth", ["$q", '$http', "$cordovaOauthUtility", function ($q, $http, $cordovaOauthUtility) {
 
         return {
 
@@ -11,39 +11,39 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    string resourceURL (This is your APP ID URI in Azure Config)
              * @return   promise
              */
-            azureAD: function(clientId, tenantId, resourceURL) {
+            azureAD: function (clientId, tenantId, resourceURL) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
                     if($cordovaOauthUtility.isInAppBrowserInstalled(cordovaPluginList) === true) {
 
                         var browserRef = window.open('https://login.microsoftonline.com/' + tenantId + '/oauth2/authorize?response_type=code&client_id=' + clientId + '&redirect_uri=http://localhost/callback', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener("loadstart", function(event) {
+                        browserRef.addEventListener("loadstart", function (event) {
                             if((event.url).indexOf('http://localhost/callback') === 0) {
                                 var requestToken = (event.url).split("code=")[1];
                                 console.log(requestToken);
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 
-                                $http({method: "post", url: "https://login.microsoftonline.com/" + tenantId + "/oauth2/token", data: 
-                                    "client_id=" + clientId + 
-                                    "&code=" + requestToken + 
+                                $http({method: "post", url: "https://login.microsoftonline.com/" + tenantId + "/oauth2/token", data:
+                                    "client_id=" + clientId +
+                                    "&code=" + requestToken +
                                     "&redirect_uri=http://localhost/callback&" +
                                     "grant_type=authorization_code&" +
                                     "resource=" + resourceURL})
-                                    .success(function(data) {
+                                    .success(function (data) {
                                         deferred.resolve(data);
                                     })
-                                    .error(function(data, status) {
+                                    .error(function (data, status) {
                                         deferred.reject("Problem authenticating");
                                     })
-                                    .finally(function() {
-                                        setTimeout(function() {
+                                    .finally(function () {
+                                        setTimeout(function () {
                                             browserRef.close();
                                         }, 10);
                                     });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -63,32 +63,32 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param	 string relyingPartyId (url of the Relying Party (resource relying on ADFS for authentication) configured in ADFS)
              * @return   promise
              */
-            adfs: function(clientId, adfsServer, relyingPartyId) {
+            adfs: function (clientId, adfsServer, relyingPartyId) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
                     if($cordovaOauthUtility.isInAppBrowserInstalled(cordovaPluginList) === true) {
                         var browserRef = window.open(adfsServer + '/adfs/oauth2/authorize?response_type=code&client_id=' + clientId +'&redirect_uri=http://localhost/callback&resource=' + relyingPartyId, '_blank', 'location=no');
 
-                        browserRef.addEventListener("loadstart", function(event) {
+                        browserRef.addEventListener("loadstart", function (event) {
                             if((event.url).indexOf('http://localhost/callback') === 0) {
                                 var requestToken = (event.url).split("code=")[1];
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                 $http({method: "post", url: adfsServer + "/adfs/oauth2/token", data: "client_id=" + clientId + "&code=" + requestToken + "&redirect_uri=http://localhost/callback&grant_type=authorization_code"  })
-                                    .success(function(data) {
+                                    .success(function (data) {
                                         deferred.resolve(data);
                                     })
-                                    .error(function(data, status) {
+                                    .error(function (data, status) {
                                         deferred.reject("Problem authenticating");
                                     })
-                                    .finally(function() {
-                                        setTimeout(function() {
+                                    .finally(function () {
+                                        setTimeout(function () {
                                             browserRef.close();
                                         }, 10);
                                     });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -107,7 +107,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            dropbox: function(appKey, options) {
+            dropbox: function (appKey, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -119,9 +119,9 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open("https://www.dropbox.com/1/oauth2/authorize?client_id=" + appKey + "&redirect_uri=" + redirect_uri + "&response_type=token", "_blank", "location=no,clearsessioncache=yes,clearcache=yes");
-                        browserRef.addEventListener("loadstart", function(event) {
+                        browserRef.addEventListener("loadstart", function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
-                            	browserRef.removeEventListener("exit",function(event){});
+                            	browserRef.removeEventListener("exit",function (event){});
                             	browserRef.close();
                                 var callbackResponse = (event.url).split("#")[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -136,7 +136,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -156,7 +156,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            digitalOcean: function(clientId, clientSecret, options) {
+            digitalOcean: function (clientId, clientSecret, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -168,25 +168,25 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open("https://cloud.digitalocean.com/v1/oauth/authorize?client_id=" + clientId + "&redirect_uri=" + redirect_uri + "&response_type=code&scope=read%20write", "_blank", "location=no,clearsessioncache=yes,clearcache=yes");
-                        browserRef.addEventListener("loadstart", function(event) {
+                        browserRef.addEventListener("loadstart", function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
                                 var requestToken = (event.url).split("code=")[1];
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                 $http({method: "post", url: "https://cloud.digitalocean.com/v1/oauth/token", data: "client_id=" + clientId + "&client_secret=" + clientSecret + "&redirect_uri=" + redirect_uri + "&grant_type=authorization_code" + "&code=" + requestToken })
-                                    .success(function(data) {
+                                    .success(function (data) {
                                         deferred.resolve(data);
                                     })
-                                    .error(function(data, status) {
+                                    .error(function (data, status) {
                                         deferred.reject("Problem authenticating");
                                     })
-                                    .finally(function() {
-                                        setTimeout(function() {
+                                    .finally(function () {
+                                        setTimeout(function () {
                                             browserRef.close();
                                         }, 10);
                                     });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -206,7 +206,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            google: function(clientId, appScope, options) {
+            google: function (clientId, appScope, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -223,9 +223,9 @@ angular.module("oauth.providers", ["oauth.utils"])
                         }
                         var urlSplitChar = (response_type === 'token') ? '#' : '?';
                         var browserRef = window.open('https://accounts.google.com/o/oauth2/auth?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&scope=' + appScope.join(" ") + '&approval_prompt=force&response_type=' + response_type, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener("loadstart", function(event) {
+                        browserRef.addEventListener("loadstart", function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
-                           		browserRef.removeEventListener("exit",function(event){});
+                           		browserRef.removeEventListener("exit",function (event){});
                             	browserRef.close();
                                 var callbackResponse = (event.url).split(urlSplitChar)[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -242,7 +242,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -263,7 +263,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            github: function(clientId, clientSecret, appScope, options) {
+            github: function (clientId, clientSecret, appScope, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -275,26 +275,26 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://github.com/login/oauth/authorize?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&scope=' + appScope.join(","), '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
                                 requestToken = (event.url).split("code=")[1];
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                 $http.defaults.headers.post.accept = 'application/json';
                                 $http({method: "post", url: "https://github.com/login/oauth/access_token", data: "client_id=" + clientId + "&client_secret=" + clientSecret + "&redirect_uri=" + redirect_uri + "&code=" + requestToken })
-                                    .success(function(data) {
+                                    .success(function (data) {
                                         deferred.resolve(data);
                                     })
-                                    .error(function(data, status) {
+                                    .error(function (data, status) {
                                         deferred.reject("Problem authenticating");
                                     })
-                                    .finally(function() {
-                                        setTimeout(function() {
+                                    .finally(function () {
+                                        setTimeout(function () {
                                             browserRef.close();
                                         }, 10);
                                     });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -314,7 +314,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            facebook: function(clientId, appScope, options) {
+            facebook: function (clientId, appScope, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -330,9 +330,9 @@ angular.module("oauth.providers", ["oauth.utils"])
                             flowUrl += "&auth_type=" + options.auth_type;
                         }
                         var browserRef = window.open(flowUrl, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
-                            	browserRef.removeEventListener("exit",function(event){});
+                            	browserRef.removeEventListener("exit",function (event){});
                             	browserRef.close();
                                 var callbackResponse = (event.url).split("#")[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -350,7 +350,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -372,7 +372,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            linkedin: function(clientId, clientSecret, appScope, state, options) {
+            linkedin: function (clientId, clientSecret, appScope, state, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -385,25 +385,25 @@ angular.module("oauth.providers", ["oauth.utils"])
                         }
 
                         var browserRef = window.open('https://www.linkedin.com/uas/oauth2/authorization?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&scope=' + appScope.join(" ") + '&response_type=code&state=' + state, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
                                 requestToken = (event.url).split("code=")[1].split("&")[0];
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                 $http({method: "post", url: "https://www.linkedin.com/uas/oauth2/accessToken", data: "client_id=" + clientId + "&client_secret=" + clientSecret + "&redirect_uri=" + redirect_uri + "&grant_type=authorization_code" + "&code=" + requestToken })
-                                    .success(function(data) {
+                                    .success(function (data) {
                                         deferred.resolve(data);
                                     })
-                                    .error(function(data, status) {
+                                    .error(function (data, status) {
                                         deferred.reject("Problem authenticating");
                                     })
-                                    .finally(function() {
-                                        setTimeout(function() {
+                                    .finally(function () {
+                                        setTimeout(function () {
                                             browserRef.close();
                                         }, 10);
                                     });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -423,7 +423,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            instagram: function(clientId, appScope, options) {
+            instagram: function (clientId, appScope, options) {
                 var deferred = $q.defer();
 
                 var split_tokens = {
@@ -451,9 +451,9 @@ angular.module("oauth.providers", ["oauth.utils"])
                         }
 
                         var browserRef = window.open('https://api.instagram.com/oauth/authorize/?client_id=' + clientId + '&redirect_uri=' + redirect_uri + scope + '&response_type='+response_type, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
-                                browserRef.removeEventListener("exit",function(event){});
+                                browserRef.removeEventListener("exit",function (event){});
                                 browserRef.close();
                                 var callbackResponse = (event.url).split(split_tokens[response_type])[1];
                                 var parameterMap = $cordovaOauthUtility.parseResponseParameters(callbackResponse);
@@ -466,7 +466,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -487,7 +487,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            box: function(clientId, clientSecret, appState, options) {
+            box: function (clientId, clientSecret, appState, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -499,25 +499,25 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://app.box.com/api/oauth2/authorize/?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&state=' + appState + '&response_type=code', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
                                 requestToken = (event.url).split("code=")[1];
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                 $http({method: "post", url: "https://app.box.com/api/oauth2/token", data: "client_id=" + clientId + "&client_secret=" + clientSecret + "&redirect_uri=" + redirect_uri + "&grant_type=authorization_code" + "&code=" + requestToken })
-                                    .success(function(data) {
+                                    .success(function (data) {
                                         deferred.resolve(data);
                                     })
-                                    .error(function(data, status) {
+                                    .error(function (data, status) {
                                         deferred.reject("Problem authenticating");
                                     })
-                                    .finally(function() {
-                                        setTimeout(function() {
+                                    .finally(function () {
+                                        setTimeout(function () {
                                             browserRef.close();
                                         }, 10);
                                     });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -538,7 +538,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            reddit: function(clientId, clientSecret, appScope, compact, options) {
+            reddit: function (clientId, clientSecret, appScope, compact, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -550,26 +550,26 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://ssl.reddit.com/api/v1/authorize' + (compact ? '.compact' : '') + '?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&duration=permanent&state=ngcordovaoauth&scope=' + appScope.join(",") + '&response_type=code', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
                                 requestToken = (event.url).split("code=")[1];
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                 $http.defaults.headers.post.Authorization = 'Basic ' + btoa(clientId + ":" + clientSecret);
                                 $http({method: "post", url: "https://ssl.reddit.com/api/v1/access_token", data: "redirect_uri=" + redirect_uri + "&grant_type=authorization_code" + "&code=" + requestToken })
-                                    .success(function(data) {
+                                    .success(function (data) {
                                         deferred.resolve(data);
                                     })
-                                    .error(function(data, status) {
+                                    .error(function (data, status) {
                                         deferred.reject("Problem authenticating");
                                     })
-                                    .finally(function() {
-                                        setTimeout(function() {
+                                    .finally(function () {
+                                        setTimeout(function () {
                                             browserRef.close();
                                         }, 10);
                                     });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -590,7 +590,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            slack: function(clientId, clientSecret, appScope, options) {
+            slack: function (clientId, clientSecret, appScope, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -603,26 +603,26 @@ angular.module("oauth.providers", ["oauth.utils"])
                         }
 
                         var browserRef = window.open('https://slack.com/oauth/authorize' + '?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&state=ngcordovaoauth&scope=' + appScope.join(","), '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
                                 requestToken = (event.url).split("code=")[1];
                                 console.log("Request token is " + requestToken);
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                 $http({method: "post", url: "https://slack.com/api/oauth.access", data: "client_id=" + clientId + "&client_secret=" + clientSecret + "&redirect_uri=" + redirect_uri + "&grant_type=authorization_code" + "&code=" + requestToken })
-                                    .success(function(data) {
+                                    .success(function (data) {
                                         deferred.resolve(data);
                                     })
-                                    .error(function(data, status) {
+                                    .error(function (data, status) {
                                         deferred.reject("Problem authenticating");
                                     })
-                                    .finally(function() {
-                                        setTimeout(function() {
+                                    .finally(function () {
+                                        setTimeout(function () {
                                             browserRef.close();
                                         }, 10);
                                     });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -642,7 +642,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    string clientSecret
              * @return   promise
              */
-            twitter: function(clientId, clientSecret, options) {
+            twitter: function (clientId, clientSecret, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -672,7 +672,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 },
                                 data: "oauth_callback=" + encodeURIComponent(redirect_uri)
                             })
-                                .success(function(requestTokenResult) {
+                                .success(function (requestTokenResult) {
                                     var requestTokenParameters = (requestTokenResult).split("&");
                                     var parameterMap = {};
                                     for(var i = 0; i < requestTokenParameters.length; i++) {
@@ -682,7 +682,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                         deferred.reject("Oauth request token was not received");
                                     }
                                     var browserRef = window.open('https://api.twitter.com/oauth/authenticate?oauth_token=' + parameterMap.oauth_token, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                                    browserRef.addEventListener('loadstart', function(event) {
+                                    browserRef.addEventListener('loadstart', function (event) {
                                         if((event.url).indexOf(redirect_uri) === 0) {
                                             var callbackResponse = (event.url).split("?")[1];
                                             var responseParameters = (callbackResponse).split("&");
@@ -706,7 +706,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                                     "oauth_verifier": parameterMap.oauth_verifier
                                                 }
                                             })
-                                                .success(function(result) {
+                                                .success(function (result) {
                                                     var accessTokenParameters = result.split("&");
                                                     var parameterMap = {};
                                                     for(var i = 0; i < accessTokenParameters.length; i++) {
@@ -717,21 +717,21 @@ angular.module("oauth.providers", ["oauth.utils"])
                                                     }
                                                     deferred.resolve(parameterMap);
                                                 })
-                                                .error(function(error) {
+                                                .error(function (error) {
                                                     deferred.reject(error);
                                                 })
-                                                .finally(function() {
-                                                    setTimeout(function() {
+                                                .finally(function () {
+                                                    setTimeout(function () {
                                                         browserRef.close();
                                                     }, 10);
                                                 });
                                         }
                                     });
-                                    browserRef.addEventListener('exit', function(event) {
+                                    browserRef.addEventListener('exit', function (event) {
                                         deferred.reject("The sign in flow was canceled");
                                     });
                                 })
-                                .error(function(error) {
+                                .error(function (error) {
                                     deferred.reject(error);
                                 });
                         } else {
@@ -753,7 +753,7 @@ angular.module("oauth.providers", ["oauth.utils"])
             * @param    object options
             * @return   promise
             */
-            meetup: function(clientId, options) {
+            meetup: function (clientId, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -765,9 +765,9 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://secure.meetup.com/oauth2/authorize/?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&response_type=token', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
-                            	browserRef.removeEventListener("exit",function(event){});
+                            	browserRef.removeEventListener("exit",function (event){});
                             	browserRef.close();
                                 var callbackResponse = (event.url).split("#")[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -782,7 +782,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -811,7 +811,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                         '&response_type=token&client_id='+escape(clientId)+
                         '&redirect_uri='+escape(redirectUri);
                 };
-                var startWith = function(string, str) {
+                var startWith = function (string, str) {
                     return (string.substr(0, str.length) === str);
                 };
                 var deferred = $q.defer();
@@ -819,7 +819,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
                     if($cordovaOauthUtility.isInAppBrowserInstalled(cordovaPluginList) === true) {
                         var browserRef = window.open(getAuthorizeUrl(loginUrl, clientId, redirectUri), "_blank", "location=no,clearsessioncache=yes,clearcache=yes");
-                        browserRef.addEventListener("loadstart", function(event) {
+                        browserRef.addEventListener("loadstart", function (event) {
                             if(startWith(event.url, redirectUri)) {
                                 var oauthResponse = {};
 
@@ -839,12 +839,12 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 } else {
                                     deferred.resolve(oauthResponse);
                                 }
-                                setTimeout(function() {
+                                setTimeout(function () {
                                     browserRef.close();
                                 }, 10);
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -865,7 +865,7 @@ angular.module("oauth.providers", ["oauth.utils"])
             * @param    object options
             * @return   promise
             */
-            strava: function(clientId, clientSecret, appScope, options) {
+            strava: function (clientId, clientSecret, appScope, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -877,25 +877,25 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://www.strava.com/oauth/authorize?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&scope=' + appScope.join(",") + '&response_type=code&approval_prompt=force', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
                                 requestToken = (event.url).split("code=")[1];
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                 $http({method: "post", url: "https://www.strava.com/oauth/token", data: "client_id=" + clientId + "&client_secret=" + clientSecret + "&code=" + requestToken })
-                                .success(function(data) {
+                                .success(function (data) {
                                     deferred.resolve(data);
                                 })
-                                .error(function(data, status) {
+                                .error(function (data, status) {
                                     deferred.reject("Problem authenticating");
                                 })
-                                .finally(function() {
-                                    setTimeout(function() {
+                                .finally(function () {
+                                    setTimeout(function () {
                                         browserRef.close();
                                     }, 10);
                                 });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -915,7 +915,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    string clientSecret
              * @return   promise
              */
-            withings: function(clientId, clientSecret) {
+            withings: function (clientId, clientSecret) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -933,7 +933,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                             var requestTokenParameters = $cordovaOauthUtility.generateUrlParameters(oauthObject);
 
                             $http({method: "get", url: requestTokenUrlBase + "?" + requestTokenParameters })
-                                .success(function(requestTokenResult) {
+                                .success(function (requestTokenResult) {
 
                                     // Step 2 : End-user authorization
                                     var parameterMap = $cordovaOauthUtility.parseResponseParameters(requestTokenResult);
@@ -954,7 +954,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                     var browserRef = window.open(authorizeUrlBase + '?' + authorizeParameters, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
 
                                     // STEP 3: User Data Access token
-                                    browserRef.addEventListener('loadstart', function(event) {
+                                    browserRef.addEventListener('loadstart', function (event) {
                                         if((event.url).indexOf("http://localhost/callback") === 0) {
                                             var callbackResponse = (event.url).split("?")[1];
                                             parameterMap = $cordovaOauthUtility.parseResponseParameters(callbackResponse);
@@ -972,28 +972,28 @@ angular.module("oauth.providers", ["oauth.utils"])
                                             var accessTokenParameters = $cordovaOauthUtility.generateUrlParameters(oauthObject);
 
                                             $http({method: "get", url: accessTokenUrlBase + '?' + accessTokenParameters})
-                                                .success(function(result) {
+                                                .success(function (result) {
                                                     var parameterMap = $cordovaOauthUtility.parseResponseParameters(result);
                                                     if(parameterMap.hasOwnProperty("oauth_token_secret") === false) {
                                                         deferred.reject("Oauth access token was not received");
                                                     }
                                                     deferred.resolve(parameterMap);
                                                 })
-                                                .error(function(error) {
+                                                .error(function (error) {
                                                     deferred.reject(error);
                                                 })
-                                                .finally(function() {
-                                                    setTimeout(function() {
+                                                .finally(function () {
+                                                    setTimeout(function () {
                                                         browserRef.close();
                                                     }, 10);
                                                 });
                                         }
                                     });
-                                    browserRef.addEventListener('exit', function(event) {
+                                    browserRef.addEventListener('exit', function (event) {
                                         deferred.reject("The sign in flow was canceled");
                                     });
                                 })
-                                .error(function(error) {
+                                .error(function (error) {
                                     deferred.reject(error);
                                 });
                         } else {
@@ -1015,7 +1015,7 @@ angular.module("oauth.providers", ["oauth.utils"])
             * @param    object options
             * @return   promise
             */
-            foursquare: function(clientId, options) {
+            foursquare: function (clientId, options) {
                 var deferred = $q.defer();
                 if (window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1029,7 +1029,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                         var browserRef = window.open('https://foursquare.com/oauth2/authenticate?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&response_type=token', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
                         browserRef.addEventListener('loadstart', function (event) {
                             if ((event.url).indexOf(redirect_uri) === 0) {
-                            	browserRef.removeEventListener("exit",function(event){});
+                            	browserRef.removeEventListener("exit",function (event){});
                             	browserRef.close();
                                 var callbackResponse = (event.url).split("#")[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -1048,7 +1048,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1069,7 +1069,7 @@ angular.module("oauth.providers", ["oauth.utils"])
             * @param    string clientSecret
             * @return   promise
             */
-            magento: function(baseUrl, clientId, clientSecret) {
+            magento: function (baseUrl, clientId, clientSecret) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1087,7 +1087,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                             $http.defaults.headers.post.Authorization = signatureObj.authorization_header;
                             $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                             $http({method: "post", url: baseUrl + "/oauth/initiate", data: "oauth_callback=http://localhost/callback" })
-                            .success(function(requestTokenResult) {
+                            .success(function (requestTokenResult) {
                                 var requestTokenParameters = (requestTokenResult).split("&");
                                 var parameterMap = {};
                                 for(var i = 0; i < requestTokenParameters.length; i++) {
@@ -1098,7 +1098,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                                 var tokenSecret = parameterMap.oauth_token_secret;
                                 var browserRef = window.open(baseUrl + '/oauth/authorize?oauth_token=' + parameterMap.oauth_token, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                                browserRef.addEventListener('loadstart', function(event) {
+                                browserRef.addEventListener('loadstart', function (event) {
                                     if((event.url).indexOf("http://localhost/callback") === 0) {
                                         var callbackResponse = (event.url).split("?")[1];
                                         var responseParameters = (callbackResponse).split("&");
@@ -1118,7 +1118,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                         $http.defaults.headers.post.Authorization = signatureObj.authorization_header;
                                         $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                         $http({method: "post", url: baseUrl + "/oauth/token" })
-                                        .success(function(result) {
+                                        .success(function (result) {
                                             var accessTokenParameters = result.split("&");
                                             var parameterMap = {};
                                             for(var i = 0; i < accessTokenParameters.length; i++) {
@@ -1129,21 +1129,21 @@ angular.module("oauth.providers", ["oauth.utils"])
                                             }
                                             deferred.resolve(parameterMap);
                                         })
-                                        .error(function(error) {
+                                        .error(function (error) {
                                             deferred.reject(error);
                                         })
-                                        .finally(function() {
-                                            setTimeout(function() {
+                                        .finally(function () {
+                                            setTimeout(function () {
                                                 browserRef.close();
                                             }, 10);
                                         });
                                     }
                                 });
-                                browserRef.addEventListener('exit', function(event) {
+                                browserRef.addEventListener('exit', function (event) {
                                     deferred.reject("The sign in flow was canceled");
                                 });
                             })
-                            .error(function(error) {
+                            .error(function (error) {
                                 deferred.reject(error);
                             });
                         } else {
@@ -1165,16 +1165,16 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    array appScope (for example: "friends,wall,photos,messages")
              * @return   promise
              */
-            vkontakte: function(clientId, appScope) {
+            vkontakte: function (clientId, appScope) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
                     if($cordovaOauthUtility.isInAppBrowserInstalled(cordovaPluginList) === true) {
                         var browserRef = window.open('https://oauth.vk.com/authorize?client_id=' + clientId + '&redirect_uri=http://oauth.vk.com/blank.html&response_type=token&scope=' + appScope.join(",") + '&display=touch&response_type=token', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             var tmp = (event.url).split("#");
                             if (tmp[0] == 'https://oauth.vk.com/blank.html' || tmp[0] == 'http://oauth.vk.com/blank.html') {
-                            	browserRef.removeEventListener("exit",function(event){});
+                            	browserRef.removeEventListener("exit",function (event){});
                             	browserRef.close();
                                 var callbackResponse = (event.url).split("#")[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -1193,7 +1193,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1268,7 +1268,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            imgur: function(clientId, options) {
+            imgur: function (clientId, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1280,9 +1280,9 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://api.imgur.com/oauth2/authorize?client_id=' + clientId + '&response_type=token', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
-                            	browserRef.removeEventListener("exit",function(event){});
+                            	browserRef.removeEventListener("exit",function (event){});
                             	browserRef.close();
                                 var callbackResponse = (event.url).split("#")[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -1297,7 +1297,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1316,7 +1316,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            spotify: function(clientId, appScope, options) {
+            spotify: function (clientId, appScope, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1328,9 +1328,9 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://accounts.spotify.com/authorize?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&response_type=token&scope=' + appScope.join(" "), '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
-                            	browserRef.removeEventListener("exit",function(event){});
+                            	browserRef.removeEventListener("exit",function (event){});
                             	browserRef.close();
                                 var callbackResponse = (event.url).split("#")[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -1345,7 +1345,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1365,7 +1365,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            uber: function(clientId, appScope, options) {
+            uber: function (clientId, appScope, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1377,9 +1377,9 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://login.uber.com/oauth/authorize?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&response_type=token&scope=' + appScope.join(" "), '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
-                                browserRef.removeEventListener("exit",function(event){});
+                                browserRef.removeEventListener("exit",function (event){});
                                 browserRef.close();
                                 var callbackResponse = (event.url).split("#")[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -1394,7 +1394,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1462,7 +1462,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            yammer: function(clientId, options) {
+            yammer: function (clientId, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1474,9 +1474,9 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://www.yammer.com/dialog/oauth?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&response_type=token', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
-                            	browserRef.removeEventListener("exit",function(event){});
+                            	browserRef.removeEventListener("exit",function (event){});
                             	browserRef.close();
                                 var callbackResponse = (event.url).split("#")[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -1491,7 +1491,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1511,7 +1511,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            venmo: function(clientId, appScope, options) {
+            venmo: function (clientId, appScope, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1523,9 +1523,9 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://api.venmo.com/v1/oauth/authorize?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&response_type=token&scope=' + appScope.join(" "), '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
-                            	browserRef.removeEventListener("exit",function(event){});
+                            	browserRef.removeEventListener("exit",function (event){});
                             	browserRef.close();
                                 var callbackResponse = (event.url).split("#")[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -1540,7 +1540,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1561,7 +1561,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            stripe: function(clientId, clientSecret, appScope, options) {
+            stripe: function (clientId, clientSecret, appScope, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1573,25 +1573,25 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://connect.stripe.com/oauth/authorize?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&scope=' + appScope + '&response_type=code', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf("http://localhost/callback") === 0) {
                                 requestToken = (event.url).split("code=")[1];
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                 $http({method: "post", url: "https://connect.stripe.com/oauth/token", data: "client_id=" + clientId + "&client_secret=" + clientSecret + "&redirect_uri=" + redirect_uri + "&grant_type=authorization_code" + "&code=" + requestToken })
-                                    .success(function(data) {
+                                    .success(function (data) {
                                         deferred.resolve(data);
                                     })
-                                    .error(function(data, status) {
+                                    .error(function (data, status) {
                                         deferred.reject("Problem authenticating");
                                     })
-                                    .finally(function() {
-                                        setTimeout(function() {
+                                    .finally(function () {
+                                        setTimeout(function () {
                                             browserRef.close();
                                         }, 10);
                                     });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1612,7 +1612,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            rally: function(clientId, clientSecret, appScope, options) {
+            rally: function (clientId, clientSecret, appScope, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1624,25 +1624,25 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://rally1.rallydev.com/login/oauth2/auth?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&scope=' + appScope + '&response_type=code', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf("http://localhost/callback") === 0) {
                                 requestToken = (event.url).split("code=")[1];
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                 $http({method: "post", url: "https://rally1.rallydev.com/login/oauth2/auth", data: "client_id=" + clientId + "&client_secret=" + clientSecret + "&redirect_uri=" + redirect_uri + "&grant_type=authorization_code" + "&code=" + requestToken })
-                                    .success(function(data) {
+                                    .success(function (data) {
                                         deferred.resolve(data);
                                     })
-                                    .error(function(data, status) {
+                                    .error(function (data, status) {
                                         deferred.reject("Problem authenticating");
                                     })
-                                    .finally(function() {
-                                        setTimeout(function() {
+                                    .finally(function () {
+                                        setTimeout(function () {
                                             browserRef.close();
                                         }, 10);
                                     });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1661,7 +1661,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            familySearch: function(clientId, state, options) {
+            familySearch: function (clientId, state, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1673,25 +1673,25 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open("https://ident.familysearch.org/cis-web/oauth2/v3/authorization?client_id=" + clientId + "&redirect_uri=" + redirect_uri + "&response_type=code&state=" + state, "_blank", "location=no,clearsessioncache=yes,clearcache=yes");
-                        browserRef.addEventListener("loadstart", function(event) {
+                        browserRef.addEventListener("loadstart", function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
                                 var requestToken = (event.url).split("code=")[1];
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                 $http({method: "post", url: "https://ident.familysearch.org/cis-web/oauth2/v3/token", data: "client_id=" + clientId + "&redirect_uri=" + redirect_uri + "&grant_type=authorization_code&code=" + requestToken })
-                                  .success(function(data) {
+                                  .success(function (data) {
                                       deferred.resolve(data);
                                   })
-                                  .error(function(data, status) {
+                                  .error(function (data, status) {
                                       deferred.reject("Problem authenticating");
                                   })
-                                  .finally(function() {
-                                      setTimeout(function() {
+                                  .finally(function () {
+                                      setTimeout(function () {
                                           browserRef.close();
                                       }, 10);
                                   });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1710,7 +1710,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            envato: function(clientId, options) {
+            envato: function (clientId, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1722,9 +1722,9 @@ angular.module("oauth.providers", ["oauth.utils"])
                             }
                         }
                         var browserRef = window.open('https://api.envato.com/authorization?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&response_type=token', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
-                            	browserRef.removeEventListener("exit",function(event){});
+                            	browserRef.removeEventListener("exit",function (event){});
                             	browserRef.close();
                                 var callbackResponse = (event.url).split("#")[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -1739,7 +1739,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1760,7 +1760,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            weibo: function(clientId, clientSecret, appScope, options) {
+            weibo: function (clientId, clientSecret, appScope, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1782,25 +1782,25 @@ angular.module("oauth.providers", ["oauth.utils"])
 
                         }
                         var browserRef = window.open(flowUrl, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
                                 requestToken = (event.url).split("code=")[1];
                                 $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                                 $http({method: "post", url: "https://api.weibo.com/oauth2/access_token", data: "client_id=" + clientId + "&client_secret=" + clientSecret + "&grant_type=authorization_code&code=" + requestToken + "&redirect_uri=" + redirect_uri})
-                                .success(function(data) {
+                                .success(function (data) {
                                     deferred.resolve(data);
                                 })
-                                .error(function(data, status) {
+                                .error(function (data, status) {
                                     deferred.reject("Problem authenticating");
                                 })
-                                .finally(function() {
-                                    setTimeout(function() {
+                                .finally(function () {
+                                    setTimeout(function () {
                                         browserRef.close();
                                     }, 10);
                                 });
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1821,7 +1821,7 @@ angular.module("oauth.providers", ["oauth.utils"])
              * @param    object options
              * @return   promise
              */
-            jawbone: function(clientId,clientSecret, appScope, options) {
+            jawbone: function (clientId,clientSecret, appScope, options) {
                 var deferred = $q.defer();
                 if(window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1834,27 +1834,27 @@ angular.module("oauth.providers", ["oauth.utils"])
                         }
                         var browserRef = window.open('https://jawbone.com/auth/oauth2/auth?client_id=' + clientId + '&redirect_uri=' + redirect_uri + '&response_type=code&scope=' + appScope.join(" "), '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
 
-                        browserRef.addEventListener('loadstart', function(event) {
+                        browserRef.addEventListener('loadstart', function (event) {
                             if((event.url).indexOf(redirect_uri) === 0) {
                               var requestToken = (event.url).split("code=")[1];
 
                               $http.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
                               $http({method: "post", url: "https://jawbone.com/auth/oauth2/token", data: "client_id=" + clientId + "&client_secret=" + clientSecret + "&grant_type=authorization_code&code=" + requestToken })
-                                .success(function(data) {
+                                .success(function (data) {
                                     deferred.resolve(data);
                                 })
-                                .error(function(data, status) {
+                                .error(function (data, status) {
                                     deferred.reject("Problem authenticating");
                                 })
-                                .finally(function() {
-                                    setTimeout(function() {
+                                .finally(function () {
+                                    setTimeout(function () {
                                         browserRef.close();
                                     }, 10);
                                 });
 
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -1873,7 +1873,7 @@ angular.module("oauth.providers", ["oauth.utils"])
             * @param    object options
             * @return   promise
             */
-            untappd: function(clientId, options) {
+            untappd: function (clientId, options) {
                 var deferred = $q.defer();
                 if (window.cordova) {
                     var cordovaPluginList = cordova.require("cordova/plugin_list");
@@ -1887,7 +1887,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                         var browserRef = window.open('https://untappd.com/oauth/authenticate/?client_id=' + clientId + '&redirect_url=' + redirect_url + '&response_type=token', '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
                         browserRef.addEventListener('loadstart', function (event) {
                             if ((event.url).indexOf(redirect_url) === 0) {
-                                browserRef.removeEventListener("exit",function(event){});
+                                browserRef.removeEventListener("exit",function (event){});
                                 browserRef.close();
                                 var callbackResponse = (event.url).split("#")[1];
                                 var responseParameters = (callbackResponse).split("&");
@@ -1905,7 +1905,7 @@ angular.module("oauth.providers", ["oauth.utils"])
                                 }
                             }
                         });
-                        browserRef.addEventListener('exit', function(event) {
+                        browserRef.addEventListener('exit', function (event) {
                             deferred.reject("The sign in flow was canceled");
                         });
                     } else {
@@ -2047,7 +2047,7 @@ angular.module("ngCordovaOauth", [
 
 angular.module("oauth.utils", [])
 
-    .factory("$cordovaOauthUtility", ["$q", function($q) {
+    .factory("$cordovaOauthUtility", ["$q", function ($q) {
 
         return {
 
@@ -2057,10 +2057,14 @@ angular.module("oauth.utils", [])
              * @param
              * @return   boolean
              */
-            isInAppBrowserInstalled: function(cordovaPluginList) {
-                var inAppBrowserNames = ["cordova-plugin-inappbrowser", "org.apache.cordova.inappbrowser"];
-                var matchFunction = function(plugin) {
-                    return inAppBrowserNames.some(function(name) {return plugin.pluginId == name;});
+            isInAppBrowserInstalled: function (cordovaPluginList) {
+                var inAppBrowserNames = [
+                  "cordova-plugin-inappbrowser.inappbrowser",
+                  "cordova-plugin-inappbrowser",
+                  "org.apache.cordova.inappbrowser"
+                ];
+                var matchFunction = function (plugin) {
+                    return inAppBrowserNames.some(function (name) {return plugin.pluginId == name;});
                 };
                 return cordovaPluginList.some(matchFunction);
             },
@@ -2076,7 +2080,7 @@ angular.module("oauth.utils", [])
              * @param    string tokenSecret (optional)
              * @return   object
              */
-            createSignature: function(method, endPoint, headerParameters, bodyParameters, secretKey, tokenSecret) {
+            createSignature: function (method, endPoint, headerParameters, bodyParameters, secretKey, tokenSecret) {
                 if(typeof jsSHA !== "undefined") {
                     var headerAndBodyParameters = angular.copy(headerParameters);
                     var bodyParameterKeys = Object.keys(bodyParameters);
@@ -2121,7 +2125,7 @@ angular.module("oauth.utils", [])
             * @param    integer length
             * @return   string
             */
-            createNonce: function(length) {
+            createNonce: function (length) {
                 var text = "";
                 var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
                 for(var i = 0; i < length; i++) {
@@ -2159,7 +2163,7 @@ angular.module("oauth.utils", [])
                 }
             },
 
-            generateOauthParametersInstance: function(consumerKey) {
+            generateOauthParametersInstance: function (consumerKey) {
                 var nonceObj = new jsSHA(Math.round((new Date()).getTime() / 1000.0), "TEXT");
                 var oauthObject = {
                     oauth_consumer_key: consumerKey,
