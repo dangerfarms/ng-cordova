@@ -7781,7 +7781,7 @@ angular.module("oauth.utils", [])
                   "org.apache.cordova.inappbrowser"
                 ];
                 var matchFunction = function(plugin) {
-                    return inAppBrowserNames.some(function(name) {return plugin.pluginId == name;});
+                    return inAppBrowserNames.some(function(name) {return plugin.id == name;});
                 };
                 return cordovaPluginList.some(matchFunction);
             },
@@ -11077,7 +11077,7 @@ angular.module("oauth.utils", [])
                     "org.apache.cordova.inappbrowser"
                 ];
                 var matchFunction = function(plugin) {
-                    return inAppBrowserNames.some(function(name) {return plugin.pluginId == name;});
+                    return inAppBrowserNames.some(function(name) {return plugin.id == name;});
                 };
                 return cordovaPluginList.some(matchFunction);
             },
